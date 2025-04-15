@@ -10,9 +10,9 @@ This example demonstrates how to build a vector retrieval system for legal provi
 ``MilvusServiceClient client = new MilvusServiceClient(
                 ConnectParam.newBuilder().withHost("localhost").withPort(19530).build());``
 ##### Mechanical model configuration
-``String qwen_api_key = System.getenv("DASHSCOPE_API_KEY");
-    private static final String API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings";
-    private final String API_KEY = qwen_api_key; // ← Replace with your actual API Key``
+``String qwen_api_key = System.getenv("DASHSCOPE_API_KEY");``  
+``private static final String API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings";``  
+``private final String API_KEY = qwen_api_key; // ← Replace with your actual API Key``
 ## Quick start
 #### Start the Milvus service
 recommend docker 
@@ -20,6 +20,8 @@ Please start the [Milvus service](https://milvus.io/docs/zh/prerequisite-docker.
 #### run program
 ``
 javac -cp ".:milvus-xxx-xxx-2.x.x.jar" xxx.java
+``  
+``
 java -cp ".:milvus-xxx-xxx-2.x.x.jar" xxx
 ``
 ## Example output
