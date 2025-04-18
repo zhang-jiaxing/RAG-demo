@@ -1,18 +1,17 @@
 # RAG-demo
 Java+Milvus,Build an RAG application
 ## Environment version
-milvus 2.5.5+jdk 17+aliyun-bailian text-embedding-v3
+milvus 2.5.5+jdk 17+aliyun-bailian text-embedding-v3 qwen-turbo
 ## brief introduction
 This project uses ten sets of simulated data derived from the vector database of the Chinese Criminal Law as the vector data for the simulation.
 This example demonstrates how to build a vector retrieval system for legal provisions using Milvus. Through the vectorization representation of text, it enables fast retrieval of similar legal provisions. The system will return the most relevant criminal law provisions based on the user's input question.
 ## Application configuration
 ##### milvus connect
-``MilvusServiceClient client = new MilvusServiceClient(
-                ConnectParam.newBuilder().withHost("localhost").withPort(19530).build());``
+##### path cn/jason/MilvusService.java
+``MilvusServiceClient(ConnectParam.newBuilder().withHost("host").withPort(port).build());``
 ##### Mechanical model configuration
-``String qwen_api_key = System.getenv("DASHSCOPE_API_KEY");``  
-``private static final String API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings";``  
-``private final String API_KEY = qwen_api_key; // ← Replace with your actual API Key``
+##### path cn/jason/QwenClient.java（EmbeddingClient.java）
+``param API_KEY,MODEL_NAME,API_URL``  
 ## Quick start
 #### Start the Milvus service
 recommend docker 
