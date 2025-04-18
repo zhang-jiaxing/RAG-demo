@@ -1,42 +1,76 @@
 package cn.jason;
 
-import okhttp3.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.alibaba.dashscope.aigc.generation.*;
+import com.alibaba.dashscope.common.Message;
+import com.alibaba.dashscope.common.Role;
+import com.alibaba.dashscope.exception.ApiException;
+import com.alibaba.dashscope.exception.InputRequiredException;
+import com.alibaba.dashscope.exception.NoApiKeyException;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
+import java.util.Arrays;
+
 /**
- * @describe: 阿里云Qwen大模型客户端
+ * @describe: 千问大模型客户端（DashScope SDK）
  * @Author JasonZhang
- * @Date 2025/4/15
-**/
+ * @Date 2025/4/18
+ */
+@Slf4j
 public class QwenClient {
-    String qwen_api_key = System.getenv("DASHSCOPE_API_KEY");
-    private static final String API_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
-    private final String API_KEY = qwen_api_key; // 换成你的 API Key
 
-    private final OkHttpClient client = new OkHttpClient();
+    private static final String API_KEY = System.getenv("DASHSCOPE_API_KEY");
+    private static final String MODEL_NAME = "qwen-turbo"; // 可切换其他模型
 
-    public String chat(String userInput) throws IOException {
-        JSONObject payload = new JSONObject();
-        payload.put("model", "qwen-turbo");
-
-        JSONArray messages = new JSONArray();
-        messages.put(new JSONObject().put("role", "user").put("content", userInput));
-        payload.put("input", new JSONObject().put("messages", messages));
-        payload.put("parameters", new JSONObject().put("temperature", 0.7));
-
-        Request request = new Request.Builder()
-                .url(API_URL)
-                .post(RequestBody.create(payload.toString(), MediaType.parse("application/json")))
-                .addHeader("Authorization", "Bearer " + API_KEY)
+    /**
+     * 与模型对话
+     * @param userInput 用户输入的问题
+     * @param context 可选的系统提示（用于指令设定）
+     * @return 模型返回的答案
+     */
+    public static String chat(String context, String userInput) throws ApiException, NoApiKeyException, InputRequiredException {
+        // 构造消息
+        // 系统提示（System Prompt）
+        Message systemMsg = Message.builder()
+                .role(Role.SYSTEM.getValue())
+                .content(context) // 例如："你是一个法律顾问，回答问题要严谨、专业。"
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
-            String res = response.body().string();
-            JSONObject json = new JSONObject(res);
-            return json.getJSONObject("output").getString("text");
+        Message userMsg = Message.builder()
+                .role(Role.USER.getValue())
+                .content(userInput)
+                .build();
+
+        // 构造请求参数
+        GenerationParam param = GenerationParam.builder()
+                .apiKey(API_KEY)
+                .model(MODEL_NAME)
+                .messages(Arrays.asList(systemMsg, userMsg))
+                .resultFormat(GenerationParam.ResultFormat.MESSAGE)
+                .build();
+
+        GenerationResult result = new Generation().call(param);
+        StringBuilder responseBuilder = new StringBuilder();
+
+        // 提取回答
+        GenerationOutput output = result.getOutput();
+        if (output != null && output.getChoices() != null) {
+            output.getChoices().forEach(choice -> {
+                Message message = choice.getMessage();
+                if (message != null && message.getContent() != null) {
+                    responseBuilder.append(message.getContent()).append("\n");
+                }
+            });
+        } else {
+            log.warn("模型未返回有效 choices：{}", result);
+            return "模型未能返回回答，请稍后再试。";
         }
+
+        return responseBuilder.toString().trim(); // 去除结尾多余换行
+    }
+
+    public static void main(String[] args) throws Exception {
+        String question = "我非法得到了公家财物，并转卖给他人，应该触犯了哪条刑法？";
+        String response = chat("", question);// 传入空字符串，不使用系统提示
+        System.out.println("模型回答：\n" + response);
     }
 }
-
